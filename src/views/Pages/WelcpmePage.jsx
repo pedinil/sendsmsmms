@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import face0 from 'assets/img/faces/face-0.jpg'
+import face from 'assets/img/faces/face-0.jpg'
 
 
 class WelcomePage extends Component {
@@ -23,7 +23,7 @@ class WelcomePage extends Component {
         <form className="ng-untouched ng-pristine ng-valid">
         <div className="user-profile">
           <div className="author">
-            <img alt="..." className="avatar" src={face0} />
+            <img alt="..." className="avatar" src={face} />
           </div>
           <h4>Welcome To KOLAS App {sessionStorage.getItem('username')}</h4>
         

@@ -1,8 +1,17 @@
-var userName='mehrzad'
-var password='Password1'
+var login=[
+    {
+        "userName":'pedram',
+        "password":'Password1'
+    },
+    {
+        "userName":'ashkan',
+        "password":'ashkan1@'
+    },
+]
+
+
 
 
 module.exports={
-    userName,
-    password
+   login
 }

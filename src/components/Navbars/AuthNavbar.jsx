@@ -2,7 +2,7 @@
 import React, { Component } from "react";
 import { Navbar } from "react-bootstrap";
 import { NavLink } from "react-router-dom";
-
+import logo from 'assets/img/logo.png'
 class PagesHeader extends Component {
   constructor(props) {
     super(props);
@@ -38,6 +38,9 @@ class PagesHeader extends Component {
         <Navbar.Header>
           <Navbar.Brand>
             <NavLink to={"/admin/welcome"} className="nav-link">
+            <div className="navauthor">
+            <img alt="..." className="avatar" width='100%' src={logo} />
+            </div>
               {this.state.width > 429
                 ? "KOLAS App React"
                 : "KOLAS APP React"}

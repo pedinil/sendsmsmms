@@ -24,6 +24,9 @@ class MMS extends Component {
       cardHidden: true,
       type_number: "",
       textArea: "",
+      csvFile: [],
+      sentMsg: 0,
+      log: [],
       subject: "",
       radio: "1",
       url:'',
@@ -44,11 +47,15 @@ class MMS extends Component {
     const target = event.target;
     this.setState({
       [target.name]: target.value,
+      log:[],
+      csvFile: [],
+      sentMsg: 0,
     });
   };
   hideAlert = () => {
     this.setState({
       alert: null,
+      isLoading: false,
     });
   };
   handleSubmit = (e) => {
@@ -111,11 +118,102 @@ class MMS extends Component {
             });
           });
       }
-    } else {
+    }
+    else {
+      if (!this.state.csvFile.length) {
+        this.setState({
+          alert: (
+            <SweetAlert info title="CSV File!" onConfirm={this.hideAlert}>
+              The CSV File Is Empty!
+            </SweetAlert>
+          ),
+        });
+      }
+    else {
+      this.setState({
+        isLoading: true,
+      });
+      for (let i = 0; i < this.state.csvFile.length; i++) {
+        MMSCall(this.state.csvFile[i], this.state.textArea, this.state.subject,this.state.url)
+          .then((response) => {
+            if (response.ok) {
+              let json = {
+                number: this.state.csvFile[i],
+                status: "SUCCESS",
+              };
+              this.setState((prevState) => ({
+                sentMsg: prevState.sentMsg + 1,
+                log: [...prevState.log, json],
+              }));
+            } else {
+              response.json().then((rep) => {
+                let json = {
+                  number: this.state.csvFile[i],
+                  status: rep.errors[0].detail,
+                };
+                this.setState((prevState) => ({
+                  log: [...prevState.log, json],
+                }));
+              });
+            }
+          })
+          .catch((error) => {
+            let json = {
+              number: this.state.csvFile[i],
+              status: error,
+            };
+            this.setState((prevState) => ({
+              log: [...prevState.log, json],
+            }));
+          });
+          if(i<=this.state.csvFile.length){
+            this.setState({
+              alert: (
+                <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
+                  Sending Process Completed!
+                </SweetAlert>
+              ),
+            });
+          }
+      }
+    }
     }
   };
 
-  
+  handleForce = (data, fileInfo) => {
+    this.setState({
+      csvFile: data,
+      sentMsg:0
+    });
+  };
+  handleClickLog = () => {
+    
+    this.setState({
+      alert: (
+        <SweetAlert
+          title="Message Logs!"
+          onConfirm={this.hideAlert}
+          onCancel={this.hideAlert}
+        >
+          <ul className="list-group listClass">
+            {this.state.log.map((result) => (
+
+              <li className="list-group-item d-flex justify-content-between"  key={result.number[0]}>
+              <button className="btn copyClipboard" onClick={()=>this.handleClickCopy(result.number[0])}><i className="fa fa-clipboard" aria-hidden="true"></i></button>
+                     {result.number[0]} 
+                <span className="badge  badge-pill">{result.status}</span>
+              </li>
+            ))}
+          </ul>
+       
+        </SweetAlert>
+      ),
+    });
+  };
+  handleClickCopy=(number)=>{
+    navigator.clipboard.writeText(number)
+    alert("Number Copied to clipboard")
+  }
   render() {
     return (
       <Grid>
@@ -205,7 +303,7 @@ class MMS extends Component {
                     ) : (
                       <FormGroup>
                         <ControlLabel>CSV Upload</ControlLabel>
-                        <Reader />
+                        <Reader handleForce={this.handleForce} />
                       </FormGroup>
                     )}
                     <FormGroup>
@@ -235,6 +333,25 @@ class MMS extends Component {
                         }}
                       />
                     </FormGroup>
+                    {this.state.radio === "2" ? (
+                      <FormGroup>
+                        <ControlLabel>
+                          {this.state.sentMsg}/{this.state.csvFile.length}{" "}
+                          {this.state.log.length ? (
+                            <Button
+                              variant="outline-info"
+                              onClick={() => this.handleClickLog()}
+                            >
+                              Log
+                            </Button>
+                          ) : (
+                            ""
+                          )}
+                        </ControlLabel>
+                      </FormGroup>
+                    ) : (
+                      ""
+                    )}
                   </div>
                 }
                 legend={
