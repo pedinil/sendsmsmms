@@ -243,7 +243,7 @@ class SMS extends Component {
                       <FormGroup>
                         <ControlLabel>MSISDN</ControlLabel>
                         <InputGroup>
-                          <InputGroup.Addon>+</InputGroup.Addon>
+                          <InputGroup.Addon>+1</InputGroup.Addon>
                           <FormControl
                             type="text"
                             value={this.state.type_number}
