@@ -128,6 +128,7 @@ class SMS extends Component {
           isLoading: true,
         });
         for (let i = 0; i < this.state.csvFile.length; i++) {
+          setTimeout(() => {  console.log("first"); }, 300);
           SMSCall(this.state.csvFile[i], this.state.textArea)
             .then((response) => {
               if (response.ok) {
