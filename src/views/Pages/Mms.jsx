@@ -27,6 +27,8 @@ class MMS extends Component {
       csvFile: [],
       sentMsg: 0,
       log: [],
+      failed:[],
+      success:[],
       subject: "",
       radio: "1",
       url:'',
@@ -134,7 +136,9 @@ class MMS extends Component {
         isLoading: true,
       });
       for (let i = 0; i < this.state.csvFile.length; i++) {
+        setTimeout(() => {
         MMSCall(this.state.csvFile[i], this.state.textArea, this.state.subject,this.state.url)
+        
           .then((response) => {
             if (response.ok) {
               let json = {
@@ -142,9 +146,8 @@ class MMS extends Component {
                 status: "SUCCESS",
               };
               this.setState((prevState) => ({
-                sentMsg: prevState.sentMsg + 1,
-                log: [...prevState.log, json],
-              }));
+                success: [...prevState.success, json],
+              }),()=>this.checkCallBack());
             } else {
               response.json().then((rep) => {
                 let json = {
@@ -152,8 +155,8 @@ class MMS extends Component {
                   status: rep.errors[0].detail,
                 };
                 this.setState((prevState) => ({
-                  log: [...prevState.log, json],
-                }));
+                  failed: [...prevState.failed, json],
+                }),()=>this.checkCallBack());
               });
             }
           })
@@ -163,30 +166,34 @@ class MMS extends Component {
               status: error,
             };
             this.setState((prevState) => ({
-              log: [...prevState.log, json],
-            }));
+              failed: [...prevState.failed, json],
+            }),()=>this.checkCallBack());
           });
-          if(i<=this.state.csvFile.length){
-            this.setState({
-              alert: (
-                <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
-                  Sending Process Completed!
-                </SweetAlert>
-              ),
-            });
-          }
+          ;}, 200 * i)
       }
     }
     }
   };
-
+  checkCallBack=()=>{
+    if((this.state.success.length+this.state.failed.length)===this.state.csvFile.length)
+    {
+      this.setState({
+            alert: (
+              <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
+                Sending Process Completed!
+              </SweetAlert>
+            ),
+          });
+    }
+  }
   handleForce = (data, fileInfo) => {
     this.setState({
       csvFile: data,
-      sentMsg:0
+      failed:[],
+      success:[]
     });
   };
-  handleClickLog = () => {
+  handleClickLog = (log) => {
     
     this.setState({
       alert: (
@@ -196,12 +203,12 @@ class MMS extends Component {
           onCancel={this.hideAlert}
         >
           <ul className="list-group listClass">
-            {this.state.log.map((result) => (
+            {log.map((result) => (
 
               <li className="list-group-item d-flex justify-content-between"  key={result.number[0]}>
               <button className="btn copyClipboard" onClick={()=>this.handleClickCopy(result.number[0])}><i className="fa fa-clipboard" aria-hidden="true"></i></button>
                      {result.number[0]} 
-                <span className="badge  badge-pill">{result.status}</span>
+                <span >{result.status}</span>
               </li>
             ))}
           </ul>
@@ -334,8 +341,37 @@ class MMS extends Component {
                       />
                     </FormGroup>
                     {this.state.radio === "2" ? (
-                      <FormGroup>
+                      <FormGroup className='statusRow'>
                         <ControlLabel>
+                          Total:{this.state.csvFile.length}
+                        </ControlLabel>
+                        <ControlLabel>
+                          Failed:{this.state.failed.length}
+                          {this.state.failed.length ? (
+                            <Button
+                              variant="outline-info"
+                              onClick={() => this.handleClickLog(this.state.failed)}
+                            >
+                              Log
+                            </Button>
+                          ) : (
+                            ""
+                          )}
+                        </ControlLabel>
+                        <ControlLabel>
+                          Success:{this.state.success.length}
+                          {this.state.success.length ? (
+                            <Button
+                              variant="outline-info"
+                              onClick={() => this.handleClickLogSuccess(this.state.success)}
+                            >
+                              Log
+                            </Button>
+                          ) : (
+                            ""
+                          )}
+                        </ControlLabel>
+                        {/* <ControlLabel>
                           {this.state.sentMsg}/{this.state.csvFile.length}{" "}
                           {this.state.log.length ? (
                             <Button
@@ -347,7 +383,7 @@ class MMS extends Component {
                           ) : (
                             ""
                           )}
-                        </ControlLabel>
+                        </ControlLabel> */}
                       </FormGroup>
                     ) : (
                       ""

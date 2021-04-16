@@ -27,6 +27,8 @@ class SMS extends Component {
       csvFile: [],
       sentMsg: 0,
       log: [],
+      failed:[],
+      success:[],
       textArea: "",
       radio: "1",
       type_numberError: null,
@@ -35,6 +37,7 @@ class SMS extends Component {
     };
   }
   componentDidMount() {
+   
     setTimeout(
       function () {
         this.setState({ cardHidden: false });
@@ -48,7 +51,7 @@ class SMS extends Component {
       [target.name]: target.value,
       log:[],
       csvFile: [],
-      sentMsg: 0,
+      
     });
   };
   hideAlert = () => {
@@ -57,9 +60,12 @@ class SMS extends Component {
       isLoading: false,
     });
   };
-  handleSubmit = (e) => {
+   handleSubmit = (e) => {
     e.preventDefault();
-
+    this.setState({
+      failed:[],
+      success:[]
+    })
     if (this.state.radio === "1") {
       if (this.state.type_numberError) {
         this.setState({
@@ -128,7 +134,7 @@ class SMS extends Component {
           isLoading: true,
         });
         for (let i = 0; i < this.state.csvFile.length; i++) {
-          setTimeout(() => {  console.log("first"); }, 700);
+          setTimeout(() => {
           SMSCall(this.state.csvFile[i], this.state.textArea)
             .then((response) => {
               if (response.ok) {
@@ -137,9 +143,8 @@ class SMS extends Component {
                   status: "SUCCESS",
                 };
                 this.setState((prevState) => ({
-                  sentMsg: prevState.sentMsg + 1,
-                  log: [...prevState.log, json],
-                }));
+                  success: [...prevState.success, json],
+                }),()=>this.checkCallBack());
               } else {
                 response.json().then((rep) => {
                   let json = {
@@ -147,8 +152,8 @@ class SMS extends Component {
                     status: rep.errors[0].detail,
                   };
                   this.setState((prevState) => ({
-                    log: [...prevState.log, json],
-                  }));
+                    failed: [...prevState.failed, json],
+                  }),()=>this.checkCallBack());
                 });
               }
             })
@@ -158,31 +163,37 @@ class SMS extends Component {
                 status: error,
               };
               this.setState((prevState) => ({
-                log: [...prevState.log, json],
-              }));
+                failed: [...prevState.failed, json],
+              }),()=>this.checkCallBack());
             });
-            if(i<=this.state.csvFile.length){
-              this.setState({
-                alert: (
-                  <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
-                    Sending Process Completed!
-                  </SweetAlert>
-                ),
-              });
-            }
+            ;}, 200 * i)
+           
         }
         
       }
     }
   };
+  checkCallBack=()=>{
+    if((this.state.success.length+this.state.failed.length)===this.state.csvFile.length)
+    {
+      this.setState({
+            alert: (
+              <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
+                Sending Process Completed!
+              </SweetAlert>
+            ),
+          });
+    }
+  }
   handleForce = (data, fileInfo) => {
     this.setState({
       csvFile: data,
-      sentMsg:0
+      failed:[],
+      success:[]
     });
   };
-  handleClickLog = () => {
-    console.log(this.state.log);
+  handleClickLog = (log) => {
+   
     this.setState({
       alert: (
         <SweetAlert
@@ -191,12 +202,12 @@ class SMS extends Component {
           onCancel={this.hideAlert}
         >
           <ul className="list-group listClass">
-            {this.state.log.map((result) => (
+            {log.map((result) => (
 
               <li className="list-group-item d-flex justify-content-between"  key={result.number[0]}>
               <button className="btn copyClipboard" onClick={()=>this.handleClickCopy(result.number[0])}><i className="fa fa-clipboard" aria-hidden="true"></i></button>
                      {result.number[0]} 
-                <span className="badge  badge-pill">{result.status}</span>
+                <span >{result.status}</span>
               </li>
             ))}
           </ul>
@@ -290,8 +301,37 @@ class SMS extends Component {
                       />
                     </FormGroup>
                     {this.state.radio === "2" ? (
-                      <FormGroup>
+                      <FormGroup className='statusRow'>
                         <ControlLabel>
+                          Total:{this.state.csvFile.length}
+                        </ControlLabel>
+                        <ControlLabel>
+                          Failed:{this.state.failed.length}
+                          {this.state.failed.length ? (
+                            <Button
+                              variant="outline-info"
+                              onClick={() => this.handleClickLog(this.state.failed)}
+                            >
+                              Log
+                            </Button>
+                          ) : (
+                            ""
+                          )}
+                        </ControlLabel>
+                        <ControlLabel>
+                          Success:{this.state.success.length}
+                          {this.state.success.length ? (
+                            <Button
+                              variant="outline-info"
+                              onClick={() => this.handleClickLogSuccess(this.state.success)}
+                            >
+                              Log
+                            </Button>
+                          ) : (
+                            ""
+                          )}
+                        </ControlLabel>
+                        {/* <ControlLabel>
                           {this.state.sentMsg}/{this.state.csvFile.length}{" "}
                           {this.state.log.length ? (
                             <Button
@@ -303,7 +343,7 @@ class SMS extends Component {
                           ) : (
                             ""
                           )}
-                        </ControlLabel>
+                        </ControlLabel> */}
                       </FormGroup>
                     ) : (
                       ""
