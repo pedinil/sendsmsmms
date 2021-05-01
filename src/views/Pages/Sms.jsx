@@ -50,7 +50,10 @@ class SMS extends Component {
     this.setState({
       [target.name]: target.value,
       log:[],
+      failed:[],
+      success:[],
       csvFile: [],
+      textArea:''
       
     });
   };
@@ -81,40 +84,42 @@ class SMS extends Component {
         });
         SMSCall(this.state.type_number, this.state.textArea)
           .then((response) => {
+           
             if (response.ok) {
-              this.setState({
-                textArea: "",
-                type_number: "",
-                isLoading: false,
-                alert: (
-                  <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
-                    Message Sent Successfully
-                  </SweetAlert>
-                ),
-              });
-            } else {
-              response.json().then((rep) => {
-                this.setState({
-                  isLoading: false,
-                  alert: (
-                    <SweetAlert
-                      danger
-                      title="Failed!"
-                      onConfirm={this.hideAlert}
-                    >
-                      {rep.errors[0].detail}
-                    </SweetAlert>
-                  ),
-                });
-              });
-            }
+                  this.setState({
+                    textArea: "",
+                    type_number: "",
+                    isLoading: false,
+                    alert: (
+                      <SweetAlert success title="Sent!" onConfirm={this.hideAlert}>
+                        Message Sent Successfully
+                      </SweetAlert>
+                    ),
+                  });
+                }else{
+                  response.json().then((result)=>{
+                    this.setState({
+                      isLoading: false,
+                      alert: (
+                        <SweetAlert
+                          danger
+                          title="Failed!"
+                          onConfirm={this.hideAlert}
+                        >
+                         {result.message}
+                        </SweetAlert>
+                      ),
+                    });
+                  })
+                  
+                }
           })
           .catch((error) => {
             this.setState({
               isLoading: false,
               alert: (
                 <SweetAlert danger title="Failed!" onConfirm={this.hideAlert}>
-                  {error}
+                 {error}
                 </SweetAlert>
               ),
             });
@@ -149,7 +154,7 @@ class SMS extends Component {
                 response.json().then((rep) => {
                   let json = {
                     number: this.state.csvFile[i],
-                    status: rep.errors[0].detail,
+                    status: rep.message,
                   };
                   this.setState((prevState) => ({
                     failed: [...prevState.failed, json],
@@ -166,7 +171,7 @@ class SMS extends Component {
                 failed: [...prevState.failed, json],
               }),()=>this.checkCallBack());
             });
-            ;}, 200 * i)
+            ;}, 1000 * i)
            
         }
         
@@ -323,7 +328,7 @@ class SMS extends Component {
                           {this.state.success.length ? (
                             <Button
                               variant="outline-info"
-                              onClick={() => this.handleClickLogSuccess(this.state.success)}
+                              onClick={() => this.handleClickLog(this.state.success)}
                             >
                               Log
                             </Button>
@@ -361,6 +366,7 @@ class SMS extends Component {
                   >
                     {this.state.isLoading ? "Sending..." : "Send"}
                   </Button>
+
                 }
                 ftTextCenter
               />

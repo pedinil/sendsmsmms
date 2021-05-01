@@ -169,7 +169,7 @@ class MMS extends Component {
               failed: [...prevState.failed, json],
             }),()=>this.checkCallBack());
           });
-          ;}, 200 * i)
+          ;}, 1000 * i)
       }
     }
     }
