@@ -171,7 +171,7 @@ class SMS extends Component {
                 failed: [...prevState.failed, json],
               }),()=>this.checkCallBack());
             });
-            ;}, 1000 * i)
+            ;}, 500 * i)
            
         }
         
